@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masa & Waktu — Matematik Tahun 4</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef4ff;color:#172033;padding:16px}
+.game{max-width:760px;margin:auto}
+.card{background:#fff;border:1px solid #dbe2ea;border-radius:22px;padding:20px;box-shadow:0 8px 24px rgba(30,50,80,.08)}
+.center{text-align:center}
+.hidden{display:none!important}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.badge{padding:8px 12px;border-radius:999px;background:#eef2ff;font-weight:800;font-size:14px}
+button{min-height:50px;border-radius:14px;border:2px solid #dbe2ea;background:#f8fafc;color:#172033;font-size:16px;font-weight:750;padding:12px;cursor:pointer}
+button:hover{border-color:#6366f1}
+button:focus-visible{outline:3px solid #6366f1;outline-offset:2px}
+.primary{background:#e8edff;border-color:#6366f1;width:100%}
+.top{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.progress{height:9px;background:#e8edf3;border-radius:99px;overflow:hidden;margin:14px 0 20px}
+.progress span{display:block;height:100%;width:0;background:#6366f1;transition:.25s}
+.question{font-size:22px;line-height:1.4;font-weight:800;margin:20px 0}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.correct{border-color:#16865b!important;background:#eaf8f1!important}
+.wrong{border-color:#c53d4f!important;background:#fff0f2!important}
+.feedback{text-align:center;font-weight:800;min-height:28px;margin:14px 0}
+.clock{width:170px;height:170px;display:block;margin:10px auto}
+.score{font-size:44px;font-weight:900;margin:10px}
+.form{display:grid;gap:10px;text-align:left;margin-top:20px}
+input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:12px;font-size:16px}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid #dbe2ea;text-align:left}
+@media(max-width:520px){
+ body{padding:10px}.card{padding:15px;border-radius:18px}
+ .answers{grid-template-columns:1fr}.question{font-size:19px}
+ .clock{width:145px;height:145px}
+}
+</style>
+</head>
+<body>
+<main class="game">
+<section class="card center" id="start">
+<div style="font-size:50px">⏰</div>
+<h1>Masa & Waktu</h1>
+<p>Matematik Tahun 4</p>
+<div class="badges">
+<span class="badge">10 Soalan</span>
+<span class="badge">3 Aras</span>
+<span class="badge">❤️ 3 Nyawa</span>
+</div>
+<button class="primary" id="startBtn">▶️ Mula Permainan</button>
+</section>
+
+<section class="card hidden" id="game">
+<div class="top">
+<span class="badge" id="level">Aras 1</span>
+<span class="badge" id="number">Soalan 1/10</span>
+<span class="badge" id="lives">❤️❤️❤️</span>
+<span class="badge">⭐ <span id="score">0</span></span>
+</div>
+<div class="progress"><span id="bar"></span></div>
+<div id="questionArea"></div>
+<div class="feedback" id="feedback" aria-live="polite"></div>
+</section>
+
+<section class="card center hidden" id="result">
+<div style="font-size:50px">🏆</div>
+<h2>Permainan Tamat!</h2>
+<div class="score" id="finalScore">0/100</div>
+<p id="message"></p>
+<div class="form">
+<label><strong>Nama</strong><input id="name" placeholder="Masukkan nama"></label>
+<label><strong>Kelas</strong><input id="class" placeholder="Contoh: 4 Bestari"></label>
+<button class="primary" id="save">💾 Simpan Rekod</button>
+</div>
+<div id="records" class="hidden">
+<h3>📋 Rekod Permainan</h3>
+<table><thead><tr><th>Nama</th><th>Kelas</th><th>Markah</th><th>Peratus</th></tr></thead>
+<tbody id="rows"></tbody></table>
+</div>
+<button style="width:100%;margin-top:16px" id="again">🔄 Main Semula</button>
+</section>
+</main>
+
+<script>
+const questions=[
+{l:1,q:"Pukul berapakah jarum minit berada pada 12 dan jarum jam berada pada 3?",o:["2:00","3:00","3:30","12:03"],a:1},
+{l:1,q:"30 minit selepas pukul 4:00 ialah...",o:["4:15","4:20","4:30","5:00"],a:2},
+{l:1,q:"1 jam bersamaan dengan...",o:["30 minit","45 minit","60 minit","100 minit"],a:2},
+{l:2,q:"Ali mula belajar pada pukul 2:15 petang dan belajar selama 45 minit. Pukul berapakah dia tamat?",o:["2:45 petang","3:00 petang","3:15 petang","3:30 petang"],a:1},
+{l:2,q:"Sebuah bas bertolak pada 8:30 pagi dan tiba pada 9:15 pagi. Berapa lama perjalanan itu?",o:["30 minit","45 minit","1 jam","1 jam 15 minit"],a:1},
+{l:2,q:"Apakah masa 20 minit sebelum pukul 7:10 pagi?",o:["6:40 pagi","6:50 pagi","7:00 pagi","7:30 pagi"],a:1},
+{l:3,q:"Siti mula bersenam pada 5:25 petang. Dia bersenam selama 1 jam 20 minit. Bilakah dia tamat?",o:["6:35 petang","6:45 petang","6:55 petang","7:05 petang"],a:1},
+{l:3,q:"Sebuah filem bermula pada 7:40 malam dan tamat pada 9:15 malam. Berapa lama filem itu?",o:["1 jam 25 minit","1 jam 35 minit","1 jam 45 minit","2 jam 5 minit"],a:1},
+{l:3,q:"Kelas bermula pada 10:35 pagi. Rehat bermula 1 jam 10 minit kemudian. Pukul berapakah waktu rehat?",o:["11:35 pagi","11:45 pagi","12:05 tengah hari","12:15 tengah hari"],a:2},
+{l:3,q:"Ahmad keluar rumah pada 6:50 pagi. Dia mengambil masa 35 minit untuk sampai ke sekolah. Jika kelas bermula 7:30 pagi, berapa minit awal Ahmad tiba?",o:["5 minit","10 minit","15 minit","20 minit"],a:2}
+];
+
+let i=0,score=0,lives=3,locked=false;
+const $=id=>document.getElementById(id);
+
+function beep(ok){
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  const c=new C(),o=c.createOscillator(),g=c.createGain();
+  o.frequency.value=ok?720:220;o.type="sine";g.gain.value=.045;
+  o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.13);
+ }catch(e){}
+}
+
+function render(){
+ locked=false;const x=questions[i];
+ $("level").textContent="Aras "+x.l;
+ $("number").textContent="Soalan "+(i+1)+"/10";
+ $("lives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);
+ $("score").textContent=score;
+ $("bar").style.width=(i/10*100)+"%";
+ $("feedback").textContent="";
+ let h="";
+ if(i===0){
+ h='<svg class="clock" viewBox="0 0 200 200" aria-label="Jam analog"><circle cx="100" cy="100" r="82" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="100" cy="100" r="4"/><text x="100" y="35" text-anchor="middle" font-size="18">12</text><text x="166" y="106" text-anchor="middle" font-size="18">3</text><text x="100" y="180" text-anchor="middle" font-size="18">6</text><text x="34" y="106" text-anchor="middle" font-size="18">9</text><line x1="100" y1="100" x2="100" y2="52" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><line x1="100" y1="100" x2="132" y2="100" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>';
+ }
+ h+='<div class="question">'+x.q+'</div><div class="answers">'+x.o.map((v,n)=>'<button data-a="'+n+'">'+String.fromCharCode(65+n)+". "+v+'</button>').join("")+'</div>';
+ $("questionArea").innerHTML=h;
+ $("questionArea").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>answer(+b.dataset.a,b)));
+}
+
+function answer(choice,btn){
+ if(locked)return;locked=true;const x=questions[i];
+ const bs=[...$("questionArea").querySelectorAll("button")];
+ if(choice===x.a){score+=10;btn.classList.add("correct");$("feedback").textContent="✅ Betul! +10 markah";beep(true)}
+ else{lives--;btn.classList.add("wrong");bs[x.a].classList.add("correct");$("feedback").textContent="❌ Kurang tepat. Jawapan: "+x.o[x.a];beep(false)}
+ $("lives").textContent="❤️".repeat(lives)+"🖤".repeat(3-lives);$("score").textContent=score;
+ setTimeout(()=>{if(lives<=0||i===9)finish();else{i++;render()}},900);
+}
+
+function finish(){
+ $("game").classList.add("hidden");$("result").classList.remove("hidden");
+ $("finalScore").textContent=score+"/100";
+ $("message").textContent=score>=80?"🌟 Cemerlang!":score>=50?"👍 Bagus! Teruskan usaha!":"💪 Cuba lagi untuk tingkatkan markah!";
+}
+
+$("startBtn").onclick=()=>{$("start").classList.add("hidden");$("game").classList.remove("hidden");render()};
+$("save").onclick=()=>{
+ const n=$("name").value.trim(),c=$("class").value.trim();
+ if(!n||!c){alert("Sila isi Nama dan Kelas terlebih dahulu.");return}
+ const tr=document.createElement("tr");
+ [n,c,score+"/100",score+"%"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});
+ $("rows").appendChild(tr);$("records").classList.remove("hidden");$("save").disabled=true;$("save").textContent="✅ Rekod Disimpan";
+};
+$("again").onclick=()=>{i=0;score=0;lives=3;$("result").classList.add("hidden");$("start").classList.remove("hidden");$("name").value="";$("class").value="";$("rows").innerHTML="";$("records").classList.add("hidden");$("save").disabled=false;$("save").textContent="💾 Simpan Rekod"};
+</script>
+</body>
+</html>
